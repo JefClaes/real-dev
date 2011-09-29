@@ -1,0 +1,81 @@
+﻿* {
+    margin: 0;    
+}
+body {	
+	color: #D5D5D5; font-family: Consolas, Inconsolata, Monaco, monospace; background-color: #000000;    
+}
+html, body {
+    height: 100%;    
+}
+#wrapper  {
+    min-height: 100%; height: auto !important; height: 100%; margin: 0 auto -30px;
+}
+#footer, #push {
+    height: 30px; 
+}
+#footer a {
+	color: #D5D5D5; text-decoration: underline;  
+}
+a {
+	color: #0080BB; text-decoration: none;
+}
+a:visited {
+	color: #1155AA;
+}
+a:hover {
+	color: #33B3EE;
+}
+a:active {
+	color: #77A2DD;
+}
+#first a {
+	color: #CC6600; font-size: 34px; font-weight: bold;	    
+}
+#first a:hover {
+	color: #F5B800; font-size: 34px; font-weight: bold;
+}
+#second a {	
+    color: font-weight: bold; color: #FFFFFF; font-size: 34px; font-weight: bold;    
+}
+#second a:hover {
+	color: rgb(249, 249, 249); font-size: 34px; font-weight: bold;
+}
+#submittedby {
+    float: right;
+}
+#container {
+	width:80%; margin-left:auto; margin-right:auto; padding-top: 150px; font-size: 20px; text-shadow: #000 1px 1px 2px;
+}
+#quoteactions {
+    padding-top: 50px;
+}
+.quoteactiondesc {
+    font-weight: bold;
+}
+#nav {
+    position: absolute; left: 15px;     
+}
+input[type=text] {
+    width: 300px;
+}
+input {
+   font-size: 20px;
+}
+textarea {
+    width: 300px;  font-size: 20px;    
+}
+#nav a {
+    color: #FFFFFF;
+}
+#info {
+    position: absolute; right: 15px;
+}
+.validation-summary-errors { 
+    color: red; 
+}  
+.inputhelp {
+    font-size: 16px;
+}
+
+
+

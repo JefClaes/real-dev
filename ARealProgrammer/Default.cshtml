@@ -1,0 +1,67 @@
+﻿@{    
+    var quoteId = string.Empty;    
+    var content = string.Empty;
+    var submittedBy = string.Empty;
+    var thisUrl = string.Empty;
+    var permaLink = string.Empty;
+    var allQuotesCount = 0;
+    var approvedQuotesCount = 0;
+    
+    quoteId = Request["q"]; 
+    thisUrl = Request.Url.GetLeftPart(UriPartial.Path);    
+    
+    var db = Database.Open("ARealProgrammer");           
+    
+    allQuotesCount = db.QuerySingle("SELECT COUNT(Id) AS Count FROM Quotes").Count; 
+    approvedQuotesCount = db.QuerySingle("SELECT COUNT(Id) AS Count FROM Quotes WHERE IsApproved = 1").Count;
+    
+    if (!quoteId.IsEmpty() && quoteId.AsInt() != 0){      
+        var result = db.QuerySingle("SELECT Content, SubmittedBy FROM Quotes WHERE Id = @0", quoteId);      
+        
+        content = result.Content;
+        submittedBy = result.SubmittedBy;
+    } else {        
+        var randomResult = db.QuerySingle("SELECT TOP 1 Id, Content, SubmittedBy FROM Quotes WHERE IsApproved = 1 ORDER BY NEWID()");   
+        
+         quoteId = Convert.ToString(randomResult.Id);
+         content = randomResult.Content;
+         submittedBy = randomResult.SubmittedBy;
+    }
+    
+    permaLink = thisUrl + "?q=" + quoteId;
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+    @RenderPage("~/Shared/Head.cshtml")
+    <body>
+        <div id="wrapper">
+            <div id="container">                
+                <span id="first"><a title="Click for another one.. or reload the page" href="@thisUrl">A Real Developer </a></span> 
+                <span id="second"><a title="Click for another one.. or reload the page" href="@thisUrl">@content</a></span>
+                <br/>               
+                <span id="submittedby">By <a href="http://twitter.com/@submittedBy">@@@submittedBy</a></span>
+                <table id="quoteactions">
+                    <tr>
+                        <td><span class="quoteactiondesc">Permalink <span>=></td>                        
+                        <td>@permaLink</td>
+                    </tr>                    
+                </table>
+            </div>
+            @RenderPage("~/Shared/Push.cshtml")
+        </div> 
+        <div id="footer">
+            <div id="nav"><a href="Submit.cshtml">Submit your quote</a></div>
+            <div id="info">                
+                <span>@allQuotesCount quotes submitted so far (@approvedQuotesCount approved)</span>
+                <span> // </span>
+                <span><a href="http://jclaes.blogspot.com/2011/04/arealdevelopercom.html" title="Be warned, this points to my blog!">About</a></span>
+                <span> / </span>
+                <span><a href="http://jclaes.blogspot.com/2011/04/arealdevelopercom.html" title="Be warned, this points to my blog!">Feedback</a></span>
+                <span> // </span>
+                <span>by <a href="http://twitter.com/JefClaes">@@JefClaes</a></span>                  
+            </div>
+        </div>
+    </body>
+</html>
