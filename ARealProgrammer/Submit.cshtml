@@ -1,4 +1,6 @@
 ﻿@{  
+    Layout = "~/_Master.cshtml";
+
     if (IsPost){        
         var quote = Request["quote"];
         var twitterUserName = Request["twitterUserName"];       
@@ -19,58 +21,50 @@
             ModelState.AddError("Twitter username", "Your Twitter username contains spaces. That's kind of weird.");
         }
         
-        if (ModelState.IsValid){
-            var db = Database.Open("ARealProgrammer");    
-            var now = DateTime.Now;
-            var insertQuery = "INSERT INTO Quotes (Content, SubmittedBy, CreatedOn, IsApproved) VALUES (@0, @1, @2, @3) ";                                       
-            var retrieveQueryId = "SELECT Id FROM Quotes WHERE SubmittedBy = @0 AND CreatedOn = @1";
+        if (ModelState.IsValid){           
+            var id = string.Empty;                                                                   
             
             twitterUserName = twitterUserName.Replace("@", "");
             
-            db.Execute(insertQuery, quote, twitterUserName, now, false);            
-            var id = db.QuerySingle(retrieveQueryId, twitterUserName, now).Id;
-            
+            using (var quoteDb = new QuoteDatabase()){  
+                 id = Convert.ToString(quoteDb.InsertQuote(quote, twitterUserName)); 
+            }          
+                        
             Response.Redirect(string.Format("~/Default.cshtml?q={0}", id));
         }
     }
 }
 
-<!DOCTYPE html>
+<div id="wrapper">
+     <div id="container">                
+        <form method="post" action="">
+            @Html.ValidationSummary("Something is wrong with your submission:") 
+            <br/>
+            <table id="form">
+                <tr>
+                    <td valign="top">Your quote</td>                        
+                    <td style="padding-left:15px">@Html.TextArea("quote", null, new { rows = 3 })</td>                     
+                    <td style="padding-left:15px"><span class="inputhelp">Don't make it too long (max. 250 characters)<br/>Also, 'A Real Developer' is prepended automatically.</span></td>
+                </tr>                    
+                <tr>
+                    <td>Twitter username</td>
+                    <td style="padding-left:15px">@Html.TextBox("twitterUsername", null, new { maxLength = 35 })</td>                            
+                </tr>                        
+                <tr>
+                    <td>&nbsp;</td>                        
+                    <td style="padding-left:15px"><input type="submit" value="Submit" class="submit"/></td>
+                </tr>
+            </table>
+            <br/>
+            <span class="inputhelp">Problem? Yes. Trolls have been spotted. From now on quotes will not be automatically approved.</span>
+        </form>
+     </div>
+     <div id="push"></div>
+</div>
+<div id="footer">
+    <div id="nav"><a href="Default.cshtml">Back</a></div>
+    <div id="info">
+        <span>by <a href="http://twitter.com/JefClaes">@@JefClaes</a></span>                          
+    </div>
+</div>
 
-<html lang="en">
-    @RenderPage("~/Shared/Head.cshtml")
-    <body>
-        <div id="wrapper">
-             <div id="container">                
-                <form method="post" action="">
-                    @Html.ValidationSummary("Something is wrong with your submission:") 
-                    <br/>
-                    <table id="form">
-                        <tr>
-                            <td valign="top">Your quote</td>                        
-                            <td style="padding-left:15px">@Html.TextArea("quote", null, new { rows = 3 })</td>                     
-                            <td style="padding-left:15px"><span class="inputhelp">Don't make it too long (max. 250 characters)<br/>Also, 'A Real Developer' is prepended automatically.</span></td>
-                        </tr>                    
-                        <tr>
-                            <td>Twitter username</td>
-                            <td style="padding-left:15px">@Html.TextBox("twitterUsername", null, new { maxLength = 35 })</td>                            
-                        </tr>                        
-                        <tr>
-                            <td>&nbsp;</td>                        
-                            <td style="padding-left:15px"><input type="submit" value="Submit" class="submit"/></td>
-                        </tr>
-                    </table>
-                    <br/>
-                    <span class="inputhelp">Problem? Yes. Trolls have been spotted. From now on quotes will not be automatically approved.</span>
-                </form>
-             </div>
-             @RenderPage("~/Shared/Push.cshtml")
-        </div>
-       <div id="footer">
-            <div id="nav"><a href="Default.cshtml">Back</a></div>
-            <div id="info">
-                <span>by <a href="http://twitter.com/JefClaes">@@JefClaes</a></span>                          
-            </div>
-        </div>
-    </body>
-</html>

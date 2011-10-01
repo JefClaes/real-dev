@@ -1,67 +1,76 @@
 ﻿@{    
-    var quoteId = string.Empty;    
-    var content = string.Empty;
-    var submittedBy = string.Empty;
-    var thisUrl = string.Empty;
-    var permaLink = string.Empty;
-    var allQuotesCount = 0;
-    var approvedQuotesCount = 0;
+    Layout = "~/_Master.cshtml";
+
+    const string DISQUS_SHORTNAME = "arealdeveloper";        
     
-    quoteId = Request["q"]; 
-    thisUrl = Request.Url.GetLeftPart(UriPartial.Path);    
-    
-    var db = Database.Open("ARealProgrammer");           
-    
-    allQuotesCount = db.QuerySingle("SELECT COUNT(Id) AS Count FROM Quotes").Count; 
-    approvedQuotesCount = db.QuerySingle("SELECT COUNT(Id) AS Count FROM Quotes WHERE IsApproved = 1").Count;
-    
-    if (!quoteId.IsEmpty() && quoteId.AsInt() != 0){      
-        var result = db.QuerySingle("SELECT Content, SubmittedBy FROM Quotes WHERE Id = @0", quoteId);      
+    string content, submittedBy, permaLink = string.Empty;               
+    int quotesCount, approvedQuotesCount = 0;        
         
-        content = result.Content;
-        submittedBy = result.SubmittedBy;
-    } else {        
-        var randomResult = db.QuerySingle("SELECT TOP 1 Id, Content, SubmittedBy FROM Quotes WHERE IsApproved = 1 ORDER BY NEWID()");   
+    var quoteId = Request["q"];
+    var thisUrl = Request.Url.GetLeftPart(UriPartial.Path);        
+    
+    using (var quoteDb = new QuoteDatabase()){         
+        approvedQuotesCount = quoteDb.GetApprovedQuotesCount();
         
-         quoteId = Convert.ToString(randomResult.Id);
-         content = randomResult.Content;
-         submittedBy = randomResult.SubmittedBy;
+        if (!quoteId.IsEmpty() && quoteId.AsInt() != 0){      
+            var result = quoteDb.GetQuote(Convert.ToInt32(quoteId));      
+            
+            content = result.Content;
+            submittedBy = result.SubmittedBy;
+        } else {        
+            var randomResult = quoteDb.GetRandomQuote();
+            
+            quoteId = Convert.ToString(randomResult.Id);
+            content = randomResult.Content;
+            submittedBy = randomResult.SubmittedBy;
+        }
     }
     
-    permaLink = thisUrl + "?q=" + quoteId;
+    permaLink = string.Format("{0}?q={1}", new object[] { thisUrl, quoteId });
 }
 
-<!DOCTYPE html>
+<div id="wrapper">
+    <div id="container">                
+        <span id="first"><a title="Click for another one.. or reload the page" href="@thisUrl">A Real Developer </a></span> 
+        <span id="second"><a title="Click for another one.. or reload the page" href="@thisUrl">@content</a></span>
+        <br/>               
+        <span id="submittedby">By <a href="http://twitter.com/@submittedBy">@@@submittedBy</a></span>
+        <table id="quoteactions">
+            <tr>
+                <td><span class="quoteactiondesc">Permalink <span></td>                        
+                <td>=></td>
+                <td>@permaLink</td>
+            </tr>                    
+            <tr>
+                <td><span class="quoteactiondesc">Share<span></td> 
+                <td>=></td>
+                <td>                         
+                    @AddThis.Render(@permaLink, "A Real Developer " + @content, "Via arealdeveloper.com")                                                  
+                </td>                        
+            </tr>                   
+        </table>     
+        <div id="disqus_thread"></div>
+    </div>
+    <div id="push"></div>
+</div> 
+<div id="footer">
+    <div id="nav"><a href="Submit.cshtml">Submit your quote</a> (@approvedQuotesCount)</div>
+    <div id="info"> 
+        <span>A Real Developer hosts with <a href="http://www.appliedi.net/" title="Thank them for hosting this site!">Applied Innovations</a></span>           
+        <span> // </span>
+        <td><a href="http://feeds.feedburner.com/ARealDeveloper">Feed</a></td>
+        <span> // </span>               
+        <span><a href="http://jclaes.blogspot.com/2011/04/arealdevelopercom.html" title="Be warned, this points to my blog!">About+Feedback</a></span>
+        <span> // </span>
+        <span><a href="http://twitter.com/JefClaes">@@JefClaes</a></span>                  
+    </div>
+</div>
 
-<html lang="en">
-    @RenderPage("~/Shared/Head.cshtml")
-    <body>
-        <div id="wrapper">
-            <div id="container">                
-                <span id="first"><a title="Click for another one.. or reload the page" href="@thisUrl">A Real Developer </a></span> 
-                <span id="second"><a title="Click for another one.. or reload the page" href="@thisUrl">@content</a></span>
-                <br/>               
-                <span id="submittedby">By <a href="http://twitter.com/@submittedBy">@@@submittedBy</a></span>
-                <table id="quoteactions">
-                    <tr>
-                        <td><span class="quoteactiondesc">Permalink <span>=></td>                        
-                        <td>@permaLink</td>
-                    </tr>                    
-                </table>
-            </div>
-            @RenderPage("~/Shared/Push.cshtml")
-        </div> 
-        <div id="footer">
-            <div id="nav"><a href="Submit.cshtml">Submit your quote</a></div>
-            <div id="info">                
-                <span>@allQuotesCount quotes submitted so far (@approvedQuotesCount approved)</span>
-                <span> // </span>
-                <span><a href="http://jclaes.blogspot.com/2011/04/arealdevelopercom.html" title="Be warned, this points to my blog!">About</a></span>
-                <span> / </span>
-                <span><a href="http://jclaes.blogspot.com/2011/04/arealdevelopercom.html" title="Be warned, this points to my blog!">Feedback</a></span>
-                <span> // </span>
-                <span>by <a href="http://twitter.com/JefClaes">@@JefClaes</a></span>                  
-            </div>
-        </div>
-    </body>
-</html>
+@section scripts {
+    <script type="text/javascript">var addthis_config = {"data_track_clickback":true};</script>
+    <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4dbc0f971f989f5b"></script>
+    @Disqus.Render(DISQUS_SHORTNAME, @quoteId, @permaLink)
+}
+
+   
+

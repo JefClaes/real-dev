@@ -1,0 +1,34 @@
+﻿@using System.ServiceModel.Syndication
+@using System.Xml
+@{
+    Layout = null;
+    
+    var feed = new SyndicationFeed();
+    var items = new List<SyndicationItem>();
+    var thisUrl = Request.Url.GetLeftPart(UriPartial.Authority);   
+
+    using (var quoteDb = new QuoteDatabase()){        
+        var results = quoteDb.GetApprovedQuotes();
+        
+        foreach(var result in results){
+            var title = "A Real Developer " + result.Content;
+            var description = string.Format("A Real Developer {0} (by @{1})", result.Content, result.SubmittedBy);
+            var permalink = new Uri(thisUrl + "?q=" + result.Id);
+        
+            var item = new SyndicationItem(title, description, permalink);
+            item.Id = Convert.ToString(result.Id);              
+                
+            items.Add(item);        
+        }
+    }        
+    
+    feed.Title = new TextSyndicationContent("A Real Developer");
+    feed.Items = items;
+    
+    var formatter = new Rss20FeedFormatter(feed);
+    
+    Response.ContentType = "text/xml";
+    using (var xmlWriter = XmlWriter.Create(Response.OutputStream)){
+        formatter.WriteTo(xmlWriter);        
+    }
+}
